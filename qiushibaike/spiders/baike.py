@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from scrapy.http import Request
+from scrapy_redis.spiders import RedisCrawlSpider
 from qiushibaike.items import QiushibaikeItem
 
 
-class BaikeSpider(scrapy.Spider):
+class BaikeSpider(RedisCrawlSpider):
     name = 'baike'
-    allowed_domains = ['baike.com']
-    host=""
+    # allowed_domains = ['baike.com']
+    # host=""
     headers={
         "USER_AGENT": 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36',
     }
-    def start_requests(self):
-
-        urls = 'https://www.qiushibaike.com/hot/'
-        yield Request(urls,headers=self.headers)
-
+    # def start_requests(self):
+    #
+    #     urls = 'https://www.qiushibaike.com/hot/'
+    #     yield Request(urls,headers=self.headers)
+    redis_key = "baike.spider:start_urls"
 
     def parse(self, response):
         str=""

@@ -14,9 +14,14 @@ BOT_NAME = 'qiushibaike'
 SPIDER_MODULES = ['qiushibaike.spiders']
 NEWSPIDER_MODULE = 'qiushibaike.spiders'
 
+#使用scrapy-redis的去重组件，不使用scrapy默认的去重
+DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
+#使用scrapy-redis的调度组件，不使用scrapy的默认调度器
+SCHEDULER = "scrapy_redis.scheduler.Scheduler"
+#允许暂停，redis请求记录不丢失
+SCHEDULER_PERSIST = True
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.106 Safari/537.36'
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
@@ -39,17 +44,6 @@ ROBOTSTXT_OBEY = True
 #TELNETCONSOLE_ENABLED = False
 
 # Override the default request headers:
-DEFAULT_REQUEST_HEADERS = {
-  "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Encoding": "gzip, deflate, sdch",
-        "Accept-Language": "zh-CN,zh;q=0.8",
-        "Cache-Control": "max-age=0",
-        "Cookie": "CAMPUS_CHECKED=0; JYERN=0.6521779221948236; CAMPUS_CHECKED=0; QS_ED=6; JYERN=0.26531747193075716; QS_GD=7; QS_TM=1; jyean=ZnkIgT1JW7dtwnfPBYUOaQMQ9EHw9Hrhs72JCf4tOTiBEDLIHPZF72BzqUmmVHNWAvt1xk4aizTajtIpfTvTrEE39lecGsS2bVqdUtacbOjnYA2_qVZSih0wl0Ao7Xe00; LF_Email=njxczx08@xyh.com; jy=34C4C600E19323AE7A3588D4651301956A3437AFB5608381E05974D4BC275FA19D4906C1AEFC7D6B868F1A2D306BA4CB38C39F61AB200E02C4A6E6C5F2E1F98D0DBDA7E364FF1E25FB83D488DADBAD62E34C4D6FCA3E4AC9D210FD33668A9E3668258E09AFEF7516B65E7FFEB527606F357ED5F7D5BA8F058BE2EAAE46A7E9403003873D2D71D7DFB3F3C856AD2FFF3AE152FC747C3A7365F0F303CA534515EC779046E472AC790853495CA08517EC6095A325835A7019E2906974067015501F864B8B9CBD1F6AF16CDC4B8BD248876DD343B4367C517BAB05B6701AD2E488A1C3E320B7AD676CFC15E219850E12EBAB82B63CC4ED9A740E8511C4EF3449BE09; jye_notice_show=1|2015/8/31 15:08:32|0|false; JYERN=0.39406700897961855; CAMPUS_CHECKED=0; jye_math_ques_s=0; jye_math_ques_d=0; jye_math_ques_t=1; jye_math_ques_0_q=070eac9c-ad95-44f1-909c-869dbb4c874a~803641a7-c36b-483b-9f8d-ac0a5522e3c3~; CNZZDATA2018550=cnzz_eid%3D484121901-1440586726-http%253A%252F%252Fwww.baidu.com%252F%26ntime%3D1441002725; _cnzz_CV2018550=%E7%94%A8%E6%88%B7%E4%BB%98%E8%B4%B9%7C%E9%9D%9EVIP%E7%94%A8%E6%88%B7%7C1441006330746%26%E7%94%A8%E6%88%B7%E8%A7%92%E8%89%B2%7C%E8%80%81%E5%B8%88%7C14",
-        "Host": "www.qiushibaike.com",
-        "Proxy-Connection": "keep-alive",
-        "Referer": "http://www.qiushibaike.com/",
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/40.0.2214.111 Chrome/40.0.2214.111 Safari/537.36"
-}
 
 # Enable or disable spider middlewares
 # See https://doc.scrapy.org/en/latest/topics/spider-middleware.html
@@ -60,8 +54,8 @@ DEFAULT_REQUEST_HEADERS = {
 # Enable or disable downloader middlewares
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
-   'qiushibaike.middlewares.customMiddlewares.CusetomUserAgent': 3,
-    'scrapy.contrib.downloadmiddleware.useragent.UserAgentMiddleware': None,
+     'scrapy.downloadermiddlewares.useragent.UserAgentMiddleware':None,
+    'qiushibaike.uamid.Uamid': 400,
 }
 
 # Enable or disable extensions
@@ -69,20 +63,24 @@ DOWNLOADER_MIDDLEWARES = {
 #EXTENSIONS = {
 #    'scrapy.extensions.telnet.TelnetConsole': None,
 #}
-
+DOWNLOAD_DELAY = 1  #设置时间间隔为1s，防止被禁
+DOWNLOAD_TIMEOUT = 5 #设置超时时间
+RETRY_ENABLED = True #设置开启重试
+RETRY_TIMES = 3 #设置重试次数
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-   'qiushibaike.pipelines.QiushibaikePipeline': 10,
+        'scrapy_redis.pipelines.RedisPipeline': 900,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
 #AUTOTHROTTLE_ENABLED = True
 # The initial download delay
-#AUTOTHROTTLE_START_DELAY = 5
+AUTOTHROTTLE_START_DELAY = 5
 # The maximum download delay to be set in case of high latencies
-#AUTOTHROTTLE_MAX_DELAY = 60
+AUTOTHROTTLE_MAX_DELAY = 60
+
 # The average number of requests Scrapy should be sending in parallel to
 # each remote server
 #AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0
@@ -96,3 +94,40 @@ ITEM_PIPELINES = {
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+MY_USER_AGENT = [
+    "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; AcooBrowser; .NET CLR 1.1.4322; .NET CLR 2.0.50727)",
+    "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; Acoo Browser; SLCC1; .NET CLR 2.0.50727; Media Center PC 5.0; .NET CLR 3.0.04506)",
+    "Mozilla/4.0 (compatible; MSIE 7.0; AOL 9.5; AOLBuild 4337.35; Windows NT 5.1; .NET CLR 1.1.4322; .NET CLR 2.0.50727)",
+    "Mozilla/5.0 (Windows; U; MSIE 9.0; Windows NT 9.0; en-US)",
+    "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Win64; x64; Trident/5.0; .NET CLR 3.5.30729; .NET CLR 3.0.30729; .NET CLR 2.0.50727; Media Center PC 6.0)",
+    "Mozilla/5.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; .NET CLR 1.0.3705; .NET CLR 1.1.4322)",
+    "Mozilla/4.0 (compatible; MSIE 7.0b; Windows NT 5.2; .NET CLR 1.1.4322; .NET CLR 2.0.50727; InfoPath.2; .NET CLR 3.0.04506.30)",
+    "Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN) AppleWebKit/523.15 (KHTML, like Gecko, Safari/419.3) Arora/0.3 (Change: 287 c9dfb30)",
+    "Mozilla/5.0 (X11; U; Linux; en-US) AppleWebKit/527+ (KHTML, like Gecko, Safari/419.3) Arora/0.6",
+    "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.2pre) Gecko/20070215 K-Ninja/2.1.1",
+    "Mozilla/5.0 (Windows; U; Windows NT 5.1; zh-CN; rv:1.9) Gecko/20080705 Firefox/3.0 Kapiko/3.0",
+    "Mozilla/5.0 (X11; Linux i686; U;) Gecko/20070322 Kazehakase/0.4.5",
+    "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.8) Gecko Fedora/1.9.0.8-1.fc10 Kazehakase/0.5.6",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.56 Safari/535.11",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_3) AppleWebKit/535.20 (KHTML, like Gecko) Chrome/19.0.1036.7 Safari/535.20",
+    "Opera/9.80 (Macintosh; Intel Mac OS X 10.6.8; U; fr) Presto/2.9.168 Version/11.52",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.11 (KHTML, like Gecko) Chrome/20.0.1132.11 TaoBrowser/2.0 Safari/536.11",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/21.0.1180.71 Safari/537.1 LBBROWSER",
+    "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; .NET4.0C; .NET4.0E; LBBROWSER)",
+    "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; QQDownload 732; .NET4.0C; .NET4.0E; LBBROWSER)",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/535.11 (KHTML, like Gecko) Chrome/17.0.963.84 Safari/535.11 LBBROWSER",
+    "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.1; WOW64; Trident/5.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; .NET4.0C; .NET4.0E)",
+    "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; WOW64; Trident/5.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; .NET4.0C; .NET4.0E; QQBrowser/7.0.3698.400)",
+    "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; QQDownload 732; .NET4.0C; .NET4.0E)",
+    "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; Trident/4.0; SV1; QQDownload 732; .NET4.0C; .NET4.0E; 360SE)",
+    "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; QQDownload 732; .NET4.0C; .NET4.0E)",
+    "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.1; WOW64; Trident/5.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; .NET4.0C; .NET4.0E)",
+    "Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/21.0.1180.89 Safari/537.1",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/21.0.1180.89 Safari/537.1",
+    "Mozilla/5.0 (iPad; U; CPU OS 4_2_1 like Mac OS X; zh-cn) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8C148 Safari/6533.18.5",
+    "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:2.0b13pre) Gecko/20110307 Firefox/4.0b13pre",
+    "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:16.0) Gecko/20100101 Firefox/16.0",
+    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11",
+    "Mozilla/5.0 (X11; U; Linux x86_64; zh-CN; rv:1.9.2.10) Gecko/20100922 Ubuntu/10.10 (maverick) Firefox/3.6.10",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36",
+    ]
