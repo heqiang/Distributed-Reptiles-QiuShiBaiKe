@@ -1,3 +1,3 @@
 # qiushibaike
 
-基于Redis的的的的的scrapy的分布式爬虫
+基于Redis的scrapy分布式爬虫
